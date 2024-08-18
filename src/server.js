@@ -26,7 +26,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Path to client build
-const clientBuildPath = path.resolve(__dirname, "../client/build");
+const clientBuildPath = path.resolve(__dirname, "../public");
 
 // Serve static files from the React app
 app.use(express.static(clientBuildPath));

@@ -16,11 +16,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-
     - name: Build Docker image
       run: |
         docker build -t cosmoscraper .
@@ -49,7 +44,8 @@ jobs:
       run: |
         echo "${{ secrets.EC2_KEY }}" | base64 --decode > ec2-key.pem
         chmod 400 ec2-key.pem
-        ssh -i ec2-key.pem $EC2_USER@$EC2_HOST << 'EOF'
+        ssh -i ec2-key.pem $EC2_USER@$EC2_HOST << EOF
+          export AWS_REGION=$AWS_REGION
           aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
           docker pull $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
           docker stop cosmoscraper || true

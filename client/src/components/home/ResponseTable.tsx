@@ -37,7 +37,7 @@ export default function ResponseTable() {
                     <TableRow>
                         <TableCell sx={{ color: 'white' }} component="th" scope="row">Links:</TableCell>
                         <TableCell sx={{ color: 'white' }}>
-                            {response.links.length > 0 ? (
+                            {response && response.links && response.links.length > 0 ? (
                                 <Select
                                     fullWidth
                                     value=""

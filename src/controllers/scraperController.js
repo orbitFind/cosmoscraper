@@ -1,7 +1,7 @@
 import { chromium } from "playwright";
 import * as tf from "@tensorflow/tfjs";
 import * as use from "@tensorflow-models/universal-sentence-encoder";
-import ScrapeData from "../models/ScrapeData.js";
+import ScrapeData from "../models/scrapeData.js";
 
 let model = null;
 

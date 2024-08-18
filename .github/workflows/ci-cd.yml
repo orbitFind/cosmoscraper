@@ -18,12 +18,6 @@ jobs:
         with:
           node-version: 20
 
-      - name: Check secrets
-        run: |
-          echo "EC2_USER is ${{ secrets.EC2_USER }}"
-          echo "EC2_HOST is ${{ secrets.EC2_HOST }}"
-          echo "MONGODB_URI is ${{ secrets.MONGODB_URI }}"
-
       - name: Build Docker image
         run: |
           docker build -t cosmoscraper .
@@ -31,30 +25,28 @@ jobs:
       - name: Save Docker image to a tarball
         run: |
           docker save cosmoscraper -o cosmoscraper.tar
-  
-      - name: Transfer Docker image to EC2
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-        run: |
-            scp -o StrictHostKeyChecking=no -i $EC2_SSH_KEY cosmoscraper.tar $EC2_USER@$EC2_HOST:/home/ec2-user/
 
-          
-      - name: Deploy Docker image on EC2
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
-          PORT: ${{ secrets.PORT }}
+      - name: Create SSH key file
         run: |
-          ssh -o StrictHostKeyChecking=no -i $EC2_SSH_KEY $EC2_USER@$EC2_HOST << 'EOF'
+          mkdir -p /home/runner/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > /home/runner/.ssh/id_rsa
+          chmod 600 /home/runner/.ssh/id_rsa
+          ls -l /home/runner/.ssh/id_rsa
+          # Optional: Display key content for debugging (be cautious)
+          # cat /home/runner/.ssh/id_rsa
+
+      - name: Transfer Docker image to EC2
+        run: |
+          scp -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa cosmoscraper.tar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ec2-user/
+
+      - name: Deploy Docker image on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
           docker load -i /home/ec2-user/cosmoscraper.tar
-          docker stop app || true
-          docker rm app || true
+          docker stop cosmoscraper || true
+          docker rm cosmoscraper || true
           docker run -d --name cosmoscraper -p 5000:5000 \
-            -e MONGODB_URI=$MONGODB_URI \
-            -e PORT=$PORT \
+            -e MONGODB_URI=${{ secrets.MONGODB_URI }} \
+            -e PORT=${{ secrets.PORT }} \
             cosmoscraper
           EOF

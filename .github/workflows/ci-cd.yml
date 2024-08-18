@@ -32,7 +32,7 @@ jobs:
       - name: Create SSH key file
         run: |
           echo "${{ secrets.EC2_SSH_KEY }}" > /home/runner/.ssh/ec2_key
-          chmod 400 /home/runner/.ssh/ec2_key
+          chmod 600 /home/runner/.ssh/ec2_key
 
       - name: Transfer Docker image to EC2
         env:
@@ -50,7 +50,7 @@ jobs:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           PORT: ${{ secrets.PORT }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY $EC2_USER@$EC2_HOST << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/ec2_key $EC2_USER@$EC2_HOST << 'EOF'
           docker load -i /home/ec2-user/cosmoscraper.tar
           docker stop app || true
           docker rm app || true

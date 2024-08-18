@@ -3,7 +3,7 @@ name: Deploy to AWS EC2
 on:
   push:
     branches:
-      - master
+      - master 
 
 jobs:
   build:
@@ -26,29 +26,31 @@ jobs:
         run: |
           docker save cosmoscraper -o cosmoscraper.tar
 
-      - name: Create SSH key file
+      - name: Set up SSH
         run: |
-          mkdir -p /home/runner/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > /home/runner/.ssh/id_rsa
-          chmod 600 /home/runner/.ssh/id_rsa
-          ls -l /home/runner/.ssh/id_rsa
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
 
-      - name: Test SSH Connection
+      - name: Test SSH connection
         run: |
-          ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo 'SSH connection successful'"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo 'SSH connection successful'"
 
       - name: Transfer Docker image to EC2
         run: |
-          scp -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa cosmoscraper.tar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ec2-user/cosmoscraper.tar
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa cosmoscraper.tar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ec2-user/
 
       - name: Deploy Docker image on EC2
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          PORT: ${{ secrets.PORT }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
           docker load -i /home/ec2-user/cosmoscraper.tar
-          docker stop cosmoscraper || true
-          docker rm cosmoscraper || true
+          docker stop app || true
+          docker rm app || true
           docker run -d --name cosmoscraper -p 5000:5000 \
-            -e MONGODB_URI=${{ secrets.MONGODB_URI }} \
-            -e PORT=${{ secrets.PORT }} \
+            -e MONGODB_URI=$MONGODB_URI \
+            -e PORT=$PORT \
             cosmoscraper
           EOF

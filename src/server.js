@@ -6,11 +6,10 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url"; // Import for ES modules
-import prom from "prom-client";
+import client from "prom-client";
 
 import { connect } from "./mongo.js"; // Adjust this path if needed
 import apiRoutes from "./routes/api.js"; // Adjust this path if needed
-import promRoutes from "./routes/prom.js"; // Adjust this path if needed
 
 const app = express();
 const PORT = process.env.PORT || 5000;

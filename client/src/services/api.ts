@@ -1,6 +1,6 @@
 import axios, { isAxiosError } from "axios";
 
-const apiUrl = "http://localhost:5000/api";
+const apiUrl = "https://cosmoscraper.onrender.com";
 
 interface ScrapeData {
   url: string;

@@ -1,11 +1,12 @@
 {
   "name": "cosmoscraper",
   "version": "1.0.0",
-  "main": "/src/server.js",
+  "main": "src/server.js",
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "build": "cd client && npm install && run build"
   },
   "keywords": [],
   "author": "",

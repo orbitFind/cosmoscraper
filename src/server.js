@@ -6,7 +6,9 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url"; // Import for ES modules
-import client from "prom-client";
+
+import promClient from "prom-client";
+import { collectDefaultMetrics } from "prom-client";
 
 import { connect } from "./mongo.js"; // Adjust this path if needed
 import apiRoutes from "./routes/api.js"; // Adjust this path if needed
@@ -14,27 +16,31 @@ import apiRoutes from "./routes/api.js"; // Adjust this path if needed
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Prometheus metrics
-const register = new client.Registry();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors());
 
-// Define a new Counter metric
-const counter = new client.Counter({
-  name: "cosmoscraper_requests_total",
-  help: "Total number of requests",
+// Create a new Counter metric
+const requestCounter = new promClient.Counter({
+  name: "http_requests_total",
+  help: "Total number of HTTP requests",
+  labelNames: ["method", "route"],
 });
 
-// Register the metric
-register.registerMetric(counter);
+// Collect default metrics (optional)
+collectDefaultMetrics();
 
-// Middleware to count requests
+// Middleware to increment the request counter
 app.use((req, res, next) => {
   requestCounter.inc({ method: req.method, route: req.path });
   next();
 });
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors());
+// Endpoint to expose metrics to Prometheus
+app.get("/metrics", (req, res) => {
+  res.set("Content-Type", promClient.register.contentType);
+  res.send(promClient.register.metrics());
+});
 
 connect();
 
@@ -52,12 +58,6 @@ app.use(express.static(clientBuildPath));
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(clientBuildPath, "index.html"));
-});
-
-// Expose metrics endpoint for Prometheus
-app.get("/metrics", (req, res) => {
-  res.setHeader("Content-Type", register.contentType);
-  res.end(register.metrics());
 });
 
 app.listen(PORT, () => {

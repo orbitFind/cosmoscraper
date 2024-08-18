@@ -18,11 +18,11 @@ jobs:
         with:
           node-version: 20
 
-      - name: Check secrets
+      - name: Create SSH key
         run: |
-          echo "EC2_USER is ${{ secrets.EC2_USER }}"
-          echo "EC2_HOST is ${{ secrets.EC2_HOST }}"
-          echo "MONGODB_URI is ${{ secrets.MONGODB_URI }}"
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
       - name: Build Docker image
         run: |

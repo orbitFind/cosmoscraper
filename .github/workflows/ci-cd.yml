@@ -21,6 +21,12 @@ jobs:
         with:
           node-version: 20
 
+      - name: Check secrets
+        run: |
+          echo "EC2_USER is ${{ secrets.EC2_USER }}"
+          echo "EC2_HOST is ${{ secrets.EC2_HOST }}"
+          echo "MONGODB_URI is ${{ secrets.MONGODB_URI }}"
+
       - name: Build Docker image
         run: |
           docker build -t cosmoscraper .
@@ -35,7 +41,8 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
-          scp -o StrictHostKeyChecking=no -i $EC2_SSH__KEY cosmoscraper.tar $EC2_USER@$EC2_HOST:/home/ec2-user/
+            scp -o StrictHostKeyChecking=no -i $EC2_SSH_KEY cosmoscraper.tar $EC2_USER@$EC2_HOST:/home/ec2-user/
+
           
       - name: Deploy Docker image on EC2
         env:

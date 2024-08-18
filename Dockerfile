@@ -31,9 +31,6 @@ COPY src/ ./src
 # Copy built React files from the previous stage
 COPY --from=build /app/client/build /app/public
 
-# Copy environment variables file if needed (optional)
-COPY .env ./
-
 # Expose the port that the server will run on
 EXPOSE 5000
 

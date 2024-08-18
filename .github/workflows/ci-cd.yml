@@ -16,8 +16,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
     - name: Build Docker image
-      run: docker build -t cosmicscraper .
+      run: |
+        docker build \
+          --build-arg MONGODB_URI=${{ secrets.MONGODB_URI }} \
+          --build-arg PORT=${{ secrets.PORT }} \
+          -t cosmicscraper .
 
     - name: Login to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v1

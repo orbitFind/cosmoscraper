@@ -27,10 +27,17 @@ RUN npx playwright install-deps
 
 # Copy the Express server source code
 COPY src/ ./src
-COPY .env ./
 
 # Copy built React files from the previous stage
 COPY --from=build /app/client/build /app/public
+
+# Define build arguments
+ARG MONGODB_URI
+ARG PORT
+
+# Set environment variables from build arguments
+ENV MONGODB_URI=$MONGODB_URI
+ENV PORT=$PORT
 
 # Expose the port that the server will run on
 EXPOSE 5000

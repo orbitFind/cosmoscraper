@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { Snackbar, Alert, SnackbarOrigin } from '@mui/material';
+import { Snackbar, Alert } from '@mui/material';
 
 type ToastSeverity = 'success' | 'error';
 

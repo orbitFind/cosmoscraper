@@ -29,14 +29,19 @@ jobs:
         run: |
           docker save cosmoscraper -o cosmoscraper.tar
 
+      - name: Create SSH key file
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > /home/runner/.ssh/ec2_key
+          chmod 400 /home/runner/.ssh/ec2_key
+
       - name: Transfer Docker image to EC2
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
-          scp -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY cosmoscraper.tar $EC2_USER@$EC2_HOST:/home/ec2-user/
-
+          scp -o StrictHostKeyChecking=no -i /home/runner/.ssh/ec2_key cosmoscraper.tar $EC2_USER@$EC2_HOST:/home/ec2-user/
+          
       - name: Deploy Docker image on EC2
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}

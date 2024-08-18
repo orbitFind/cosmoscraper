@@ -19,6 +19,8 @@ const __dirname = path.dirname(__filename);
 // Path to client build
 const clientBuildPath = path.resolve(__dirname, "../client/build");
 
+console.log("clientBuildPath", clientBuildPath);
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());

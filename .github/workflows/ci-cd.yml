@@ -16,16 +16,23 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
     - name: Build Docker image
       run: |
-        docker build -t cosmoscraper .
+        docker build -t cosmicscraper .
 
     - name: Login to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v1
+      with:
+        region: ${{ secrets.AWS_REGION }}
 
     - name: Tag Docker image
       run: |
-        docker tag cosmoscraper:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
+        docker tag cosmicscraper:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
 
     - name: Push Docker image to ECR
       run: |
@@ -39,19 +46,13 @@ jobs:
         AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
         AWS_REGION: ${{ secrets.AWS_REGION }}
         ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-        MONGODB_URI: ${{ secrets.MONGODB_URI }}
-        PORT: ${{ secrets.PORT }}
       run: |
         echo "${{ secrets.EC2_KEY }}" | base64 --decode > ec2-key.pem
         chmod 400 ec2-key.pem
-        ssh -i ec2-key.pem $EC2_USER@$EC2_HOST << EOF
-          export AWS_REGION=$AWS_REGION
+        ssh -i ec2-key.pem $EC2_USER@$EC2_HOST << 'EOF'
           aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
           docker pull $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
-          docker stop cosmoscraper || true
-          docker rm cosmoscraper || true
-          docker run -d -p 5000:5000 \
-            -e MONGODB_URI=$MONGODB_URI \
-            -e PORT=$PORT \
-            --name cosmoscraper $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+          docker stop cosmicscraper || true
+          docker rm cosmicscraper || true
+          docker run -d -p 5000:5000 --name cosmicscraper $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
         EOF
